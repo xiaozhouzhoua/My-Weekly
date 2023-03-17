@@ -28,7 +28,9 @@ bind 0.0.0.0
 #修改启动方式为多线程模式
 daemonize yes
 #设置密码 requirepass foobared
-requirepass 123456
+# requirepass 123456
+#禁止公网访问
+protected-mode no
 ```
 
 ### 修改服务启动文件
