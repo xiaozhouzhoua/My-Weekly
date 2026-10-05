@@ -502,7 +502,7 @@ const DOCS = [
 
   {y:'root',t:'李笑来《财富的真相》研究报告',f:'李笑来《财富的真相》研究报告.md',kb:3.3,chars:1238,
    d:'一份考证型报告：确认《财富的真相》并非李笑来著作，并梳理其真实作品清单。',tags:['研究','读书']},
-  {y:'root',t:'README · 技术知识库说明',f:'README.md',kb:4.6,chars:2266,
+  {y:'root',t:'README · 技术知识库说明',f:'README.md',kb:5.2,chars:2547,
    d:'仓库总览：项目简介、目录结构、技术栈覆盖、使用指南、贡献方式与文档规范。',tags:['仓库文档']},
   {y:'root',t:'workspace_summary · 工作区内容总结',f:'workspace_summary.md',kb:2.5,chars:1145,
    d:'逐目录、逐文件的内容概览，以及这个知识库适合解决什么问题、价值在哪里。',tags:['仓库文档']}
@@ -791,11 +791,18 @@ function mdToHtml(src){
         stack[stack.length-1].node.children.push(node);
         stack.push({indent:it.indent, node});
       });
-      const ser = node => {
-        const tag = node.ordered ? 'ol' : 'ul';
-        return '<'+tag+'>'+node.children.map(c=>'<li>'+inline(c.text)+(c.children.length?ser(c.children):'')+'</li>').join('')+'</'+tag+'>';
+      // 按同类子项连续分组：有序 / 无序各自成列表，缩进更深者嵌进上一个 <li>
+      const ser = children => {
+        let html = '', k = 0;
+        while(k < children.length){
+          const ordered = children[k].ordered, run = [];
+          while(k < children.length && children[k].ordered === ordered) run.push(children[k++]);
+          const tag = ordered ? 'ol' : 'ul';
+          html += '<'+tag+'>'+run.map(c=>'<li>'+inline(c.text)+(c.children.length?ser(c.children):'')+'</li>').join('')+'</'+tag+'>';
+        }
+        return html;
       };
-      out.push(ser(root));
+      out.push(ser(root.children));
       continue;
     }
     // 段落（保留作者换行）
@@ -870,11 +877,25 @@ document.addEventListener('click',e=>{
   if(cardEl && !e.target.closest('a')) openDoc(cardEl.dataset.f, true);
 });
 $('#reader-body').addEventListener('click',e=>{
-  const a = e.target.closest('a[href^="#"]');
+  const a = e.target.closest('a[href]');
   if(!a) return;
-  const id = decodeURIComponent(a.getAttribute('href').slice(1));
-  const target = document.getElementById(id) || $('#reader-body [id="'+CSS.escape(id)+'"]');
-  if(target){ e.preventDefault(); target.scrollIntoView({behavior:'smooth',block:'start'}); }
+  const href = a.getAttribute('href');
+  // 正文里的目录锚点：在阅读器内滚动，不改变地址栏
+  if(href.startsWith('#')){
+    const id = decodeURIComponent(href.slice(1));
+    const target = document.getElementById(id) || $('#reader-body [id="'+CSS.escape(id)+'"]');
+    if(target){ e.preventDefault(); target.scrollIntoView({behavior:'smooth',block:'start'}); }
+    return;
+  }
+  // 站内的 .md 链接：换成用阅读器打开，而不是把 Markdown 原样丢给浏览器
+  try{
+    const u = new URL(a.href, location.href);
+    const root = new URL('.', location.href);
+    if(u.origin === root.origin && u.href.startsWith(root.href)){
+      const rel = decodeURIComponent(u.href.slice(root.href.length));
+      if(findDoc(rel)){ e.preventDefault(); openDoc(rel, true); }
+    }
+  }catch(_){}
 });
 $('#reader-body').addEventListener('scroll',()=>{
   const el = $('#reader-body');
