@@ -67,6 +67,16 @@
 | [Redis7](2023/redis7.md) | Redis 7 相关配置和使用 | 2.0KB |
 | [Maven问题汇总](2023/maven问题汇总.md) | Maven 常见问题解决方案 | 1.9KB |
 
+## 🌐 在线浏览
+
+**→ https://xiaozhouzhoua.github.io/My-Weekly/**
+
+仓库根目录的 `index.html` 是本站首页（必须叫这个名字，Web 服务器约定目录默认文档为 `index.html`）：
+按年份归档全部文档，支持关键词 / 年份 / 主题筛选，点击任意一篇可在页面内直接阅读 Markdown 正文。
+
+发布方式：**Settings → Pages → Source** 选择 `main` 分支根目录，不需要任何工作流。
+根目录的 `.nojekyll` 让 Pages 原样发布文件（跳过 Jekyll 转换），因此首页可以直接读取同仓库的 `.md` 原文。
+
 ## 🎯 使用指南
 
 ### 快速开始

@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My-Weekly · 技术周刊与知识库</title>
+<meta name="description" content="My-Weekly 技术知识库：按年份归档的命令行、Java、数据库与工程化实践文档，支持站内阅读。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%234f46e5'/><text x='50' y='70' font-size='58' font-family='sans-serif' fill='white' text-anchor='middle'>W</text></svg>">
+<style>
+/* ---------- 设计变量 ---------- */
+:root{
+  --bg:#f4f5f8;
+  --bg-2:#eceef4;
+  --surface:rgba(255,255,255,.78);
+  --surface-2:rgba(255,255,255,.92);
+  --line:rgba(16,20,40,.10);
+  --line-strong:rgba(16,20,40,.18);
+  --text:#14161c;
+  --text-2:#4d5462;
+  --text-3:#7b8494;
+  --accent:#4f46e5;
+  --accent-2:#0ea5a4;
+  --accent-soft:rgba(79,70,229,.10);
+  --code-bg:rgba(20,24,40,.055);
+  --shadow-1:0 1px 2px rgba(16,20,40,.05), 0 8px 24px -12px rgba(16,20,40,.20);
+  --shadow-2:0 2px 4px rgba(16,20,40,.06), 0 28px 60px -24px rgba(16,20,40,.34);
+  --radius:16px;
+  --header-h:62px;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+}
+html[data-theme="dark"]{
+  --bg:#080a0f;
+  --bg-2:#0d1017;
+  --surface:rgba(255,255,255,.045);
+  --surface-2:rgba(22,26,36,.92);
+  --line:rgba(255,255,255,.10);
+  --line-strong:rgba(255,255,255,.20);
+  --text:#e9ebf2;
+  --text-2:#a8afbd;
+  --text-3:#7d8595;
+  --accent:#8b8cf9;
+  --accent-2:#42d6cf;
+  --accent-soft:rgba(139,140,249,.14);
+  --code-bg:rgba(255,255,255,.06);
+  --shadow-1:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -16px rgba(0,0,0,.8);
+  --shadow-2:0 2px 6px rgba(0,0,0,.5), 0 40px 80px -30px rgba(0,0,0,.9);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;font-family:var(--sans);color:var(--text);background:var(--bg);
+  -webkit-font-smoothing:antialiased;line-height:1.65;
+  transition:background .3s ease,color .3s ease;
+}
+/* 会透出颜色的动态背景层：玻璃面板靠它才有质感 */
+.bg{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.bg::after{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(58% 46% at 12% 8%, rgba(99,102,241,.26), transparent 62%),
+    radial-gradient(46% 40% at 88% 4%, rgba(14,165,164,.20), transparent 60%),
+    radial-gradient(70% 55% at 50% 108%, rgba(236,72,153,.14), transparent 65%);
+}
+html[data-theme="dark"] .bg::after{
+  background:
+    radial-gradient(58% 46% at 12% 6%, rgba(99,102,241,.30), transparent 62%),
+    radial-gradient(46% 40% at 88% 2%, rgba(14,165,164,.16), transparent 60%),
+    radial-gradient(70% 60% at 50% 110%, rgba(139,92,246,.20), transparent 65%);
+}
+.blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5;animation:drift 26s ease-in-out infinite}
+.blob.b1{width:44vw;height:44vw;left:-8vw;top:-6vw;background:rgba(99,102,241,.42)}
+.blob.b2{width:36vw;height:36vw;right:-6vw;top:16vh;background:rgba(14,165,164,.34);animation-delay:-8s}
+.blob.b3{width:40vw;height:40vw;left:26vw;bottom:-14vw;background:rgba(236,72,153,.26);animation-delay:-15s}
+@keyframes drift{0%,100%{transform:translate3d(0,0,0) scale(1)}33%{transform:translate3d(4vw,3vh,0) scale(1.08)}66%{transform:translate3d(-3vw,-2vh,0) scale(.95)}}
+
+.wrap{width:min(1180px,100% - 40px);margin-inline:auto}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+
+/* ---------- 顶栏 ---------- */
+header.top{
+  position:sticky;top:0;z-index:60;height:var(--header-h);
+  backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);
+  background:color-mix(in srgb,var(--bg) 72%,transparent);
+  border-bottom:1px solid var(--line);
+}
+.top .wrap{height:100%;display:flex;align-items:center;gap:18px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.2px;white-space:nowrap}
+.brand .mark{
+  width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:#fff;font-size:15px;font-weight:800;
+  background:linear-gradient(140deg,var(--accent),var(--accent-2));box-shadow:0 6px 16px -8px var(--accent);
+}
+.brand small{display:block;font-weight:500;font-size:11.5px;color:var(--text-3);letter-spacing:.3px}
+nav.top-nav{display:flex;gap:4px;margin-left:8px}
+nav.top-nav a{padding:7px 12px;border-radius:9px;font-size:14px;color:var(--text-2);transition:.2s}
+nav.top-nav a:hover{background:var(--accent-soft);color:var(--accent)}
+.top-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+.icon-btn{
+  width:36px;height:36px;border-radius:10px;display:grid;place-items:center;
+  border:1px solid var(--line);background:var(--surface);transition:.2s;font-size:15px;
+}
+.icon-btn:hover{border-color:var(--line-strong);transform:translateY(-1px)}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:11px;font-size:14px;font-weight:600;
+  border:1px solid var(--line);background:var(--surface);transition:.22s;white-space:nowrap;
+}
+.btn:hover{border-color:var(--line-strong);transform:translateY(-1px);box-shadow:var(--shadow-1)}
+.btn.primary{color:#fff;border-color:transparent;background:linear-gradient(140deg,var(--accent),var(--accent-2));box-shadow:0 10px 26px -12px var(--accent)}
+.btn.primary:hover{box-shadow:0 14px 32px -12px var(--accent)}
+.btn.sm{padding:7px 12px;font-size:13px;border-radius:9px}
+
+/* ---------- Hero ---------- */
+.hero{padding:clamp(46px,7vw,86px) 0 26px}
+.pill{
+  display:inline-flex;align-items:center;gap:8px;padding:6px 13px;border-radius:999px;font-size:12.5px;letter-spacing:.4px;
+  color:var(--accent);background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 26%,transparent);
+}
+.hero h1{
+  margin:18px 0 14px;font-size:clamp(34px,6vw,58px);line-height:1.08;letter-spacing:-1px;font-weight:800;
+}
+.hero h1 .grad{background:linear-gradient(120deg,var(--accent),var(--accent-2) 70%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p.lead{max-width:64ch;margin:0 0 10px;color:var(--text-2);font-size:clamp(15px,1.6vw,17px)}
+.hero p.sub{max-width:64ch;margin:0;color:var(--text-3);font-size:14.5px}
+.hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.stats{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;margin-top:38px;
+  border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--line);
+}
+.stats div{background:var(--surface);padding:16px 18px}
+.stats b{display:block;font-size:clamp(20px,2.6vw,26px);font-weight:800;letter-spacing:-.5px}
+.stats span{font-size:12.5px;color:var(--text-3)}
+
+/* ---------- 通用区块 ---------- */
+section{padding:52px 0}
+.sec-head{margin-bottom:26px}
+.eyebrow{font-size:12.5px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--accent)}
+.sec-head h2{margin:8px 0 6px;font-size:clamp(23px,3vw,30px);letter-spacing:-.4px}
+.sec-head p{margin:0;color:var(--text-2);max-width:70ch;font-size:14.5px}
+
+/* ---------- 主题卡片 ---------- */
+.topics{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px}
+.topic{
+  text-align:left;padding:18px;border-radius:14px;border:1px solid var(--line);background:var(--surface);
+  transition:.22s;display:flex;flex-direction:column;gap:8px;min-height:132px;
+}
+.topic:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--accent) 40%,var(--line));box-shadow:var(--shadow-1)}
+.topic .ico{font-size:19px}
+.topic h3{margin:0;font-size:16.5px}
+.topic p{margin:0;font-size:13px;color:var(--text-3)}
+.topic .cnt{margin-top:auto;font-size:12.5px;color:var(--accent);font-weight:600}
+
+/* ---------- 工具栏 ---------- */
+.toolbar{
+  position:sticky;top:var(--header-h);z-index:40;margin-bottom:26px;padding:14px 16px;border-radius:14px;
+  border:1px solid var(--line);
+  backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);
+  background:color-mix(in srgb,var(--bg) 78%,transparent);
+}
+.toolbar .row{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{
+  padding:6px 12px;border-radius:999px;font-size:13px;border:1px solid var(--line);background:var(--surface);
+  color:var(--text-2);transition:.18s;
+}
+.chip:hover{border-color:var(--line-strong);color:var(--text)}
+.chip[aria-pressed="true"]{color:#fff;background:linear-gradient(140deg,var(--accent),var(--accent-2));border-color:transparent;font-weight:600}
+.chip .n{opacity:.7;font-size:11.5px;margin-left:4px}
+.search{margin-left:auto;position:relative;display:flex;align-items:center;min-width:220px;flex:1 1 220px;max-width:320px}
+.search input{
+  width:100%;padding:9px 34px 9px 34px;border-radius:10px;font:inherit;font-size:13.5px;color:var(--text);
+  border:1px solid var(--line);background:var(--surface-2);
+}
+.search input::placeholder{color:var(--text-3)}
+.search .s-ico{position:absolute;left:11px;color:var(--text-3);font-size:13px}
+.search kbd{
+  position:absolute;right:9px;font:600 11px var(--mono);color:var(--text-3);
+  border:1px solid var(--line);border-radius:5px;padding:1px 5px;background:var(--surface);
+}
+.toolbar .hint{margin-top:10px;font-size:12.5px;color:var(--text-3);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.toolbar .hint button{font-size:12.5px;color:var(--accent);border-bottom:1px dashed color-mix(in srgb,var(--accent) 50%,transparent)}
+
+/* ---------- 年份分组 + 卡片 ---------- */
+.group{margin-bottom:44px;scroll-margin-top:150px}
+.group-head{display:flex;align-items:baseline;gap:12px;padding-bottom:12px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+.group-head .yr{font:800 26px/1 var(--sans);letter-spacing:-.5px}
+.group-head .yr.sm{font-size:19px}
+.group-head .gs{color:var(--text-3);font-size:13.5px}
+.group-head .gc{margin-left:auto;font-size:12.5px;color:var(--text-3);white-space:nowrap}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.card{
+  display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:14px;border:1px solid var(--line);
+  background:var(--surface);transition:.22s;
+}
+.card:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--accent) 34%,var(--line));box-shadow:var(--shadow-1)}
+.card .c-top{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-3)}
+.badge{
+  padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:.3px;
+  color:var(--accent);background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);
+}
+.badge.ghost{color:var(--text-3);background:transparent;border-color:var(--line)}
+.card h3{margin:0;font-size:16.5px;line-height:1.45;letter-spacing:-.2px}
+.card .sum{margin:0;font-size:13.5px;color:var(--text-2)}
+.card .tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:11.5px;color:var(--text-3);border:1px solid var(--line);border-radius:6px;padding:2px 7px}
+.card .c-foot{margin-top:auto;padding-top:12px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.card .c-foot .meta{font-size:12px;color:var(--text-3)}
+.card .c-foot .acts{margin-left:auto;display:flex;gap:6px;align-items:center}
+.link-mini{font-size:12.5px;color:var(--text-3);padding:5px 8px;border-radius:8px;transition:.18s}
+.link-mini:hover{color:var(--accent);background:var(--accent-soft)}
+.empty{padding:34px;text-align:center;color:var(--text-3);border:1px dashed var(--line-strong);border-radius:14px}
+
+/* ---------- 说明区 ---------- */
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.note{padding:18px;border-radius:14px;border:1px solid var(--line);background:var(--surface)}
+.note h3{margin:0 0 8px;font-size:15.5px}
+.note p,.note li{margin:0;font-size:13.5px;color:var(--text-2)}
+.note ul{margin:6px 0 0;padding-left:18px;display:grid;gap:5px}
+.note code{font:13px var(--mono);background:var(--code-bg);padding:1px 5px;border-radius:5px}
+
+/* ---------- 页脚 ---------- */
+footer.bottom{padding:44px 0 56px;border-top:1px solid var(--line);margin-top:22px;color:var(--text-3);font-size:13px}
+footer.bottom .wrap{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+footer.bottom a{color:var(--text-2);border-bottom:1px dashed var(--line-strong)}
+footer.bottom a:hover{color:var(--accent)}
+footer.bottom .r{margin-left:auto;display:flex;gap:14px;flex-wrap:wrap}
+
+/* ---------- 阅读器 ---------- */
+.overlay{position:fixed;inset:0;z-index:100;display:flex;justify-content:flex-end}
+.overlay[hidden]{display:none}
+.overlay .scrim{position:absolute;inset:0;background:rgba(8,10,18,.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);animation:fade .22s ease}
+.reader{
+  position:relative;width:min(920px,100%);height:100%;display:flex;flex-direction:column;
+  background:var(--surface-2);border-left:1px solid var(--line);box-shadow:var(--shadow-2);
+  animation:slide .28s cubic-bezier(.22,.8,.3,1);
+  backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);
+}
+@keyframes slide{from{transform:translateX(26px);opacity:.4}to{transform:none;opacity:1}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.reader-head{display:flex;gap:14px;align-items:flex-start;padding:18px 22px 14px;border-bottom:1px solid var(--line)}
+.reader-head h2{margin:8px 0 6px;font-size:clamp(19px,2.4vw,24px);line-height:1.35;letter-spacing:-.3px}
+.reader-head .meta{font-size:12.5px;color:var(--text-3);display:flex;gap:10px;flex-wrap:wrap}
+.reader-head .close{margin-left:auto;flex:0 0 auto}
+.reader-bar{height:2px;background:transparent}
+.reader-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .1s linear}
+.reader-body{flex:1;overflow:auto;padding:26px 30px 60px;scroll-behavior:smooth}
+.reader-foot{padding:12px 22px;border-top:1px solid var(--line);display:flex;gap:12px;align-items:center;font-size:12.5px;color:var(--text-3);flex-wrap:wrap}
+.loading{padding:40px;text-align:center;color:var(--text-3)}
+.loading .spin{
+  width:22px;height:22px;margin:0 auto 12px;border-radius:50%;
+  border:2px solid var(--line-strong);border-top-color:var(--accent);animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-err{padding:22px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.load-err h3{margin:0 0 8px;font-size:16px}
+.load-err p{margin:0 0 14px;color:var(--text-2);font-size:13.5px}
+
+/* ---------- Markdown 排版 ---------- */
+.md{font-size:15.5px;color:var(--text);max-width:76ch}
+.md>*:first-child{margin-top:0}
+.md h1,.md h2,.md h3,.md h4,.md h5,.md h6{margin:1.7em 0 .6em;line-height:1.35;letter-spacing:-.2px;scroll-margin-top:16px}
+.md h1{font-size:1.7em;padding-bottom:.35em;border-bottom:1px solid var(--line)}
+.md h2{font-size:1.36em;padding-left:12px;border-left:3px solid var(--accent)}
+.md h3{font-size:1.15em}
+.md h4{font-size:1.03em;color:var(--text-2)}
+.md p{margin:.85em 0}
+.md ul,.md ol{margin:.7em 0;padding-left:1.5em}
+.md li{margin:.35em 0}
+.md li>ul,.md li>ol{margin:.3em 0}
+.md a{color:var(--accent);border-bottom:1px solid color-mix(in srgb,var(--accent) 40%,transparent)}
+.md a:hover{border-bottom-color:var(--accent)}
+.md strong{font-weight:700}
+.md hr{border:0;border-top:1px solid var(--line);margin:1.8em 0}
+.md blockquote{
+  margin:1em 0;padding:.7em 1.1em;border-left:3px solid var(--accent-2);
+  background:var(--accent-soft);border-radius:0 10px 10px 0;color:var(--text-2);
+}
+.md blockquote p{margin:.3em 0}
+.md code{font:13.5px/1.6 var(--mono);background:var(--code-bg);padding:2px 6px;border-radius:6px;word-break:break-word}
+.md pre.code{
+  margin:1.1em 0;padding:15px 17px;border-radius:12px;overflow:auto;
+  background:color-mix(in srgb,var(--text) 92%,transparent);color:#eef1f7;border:1px solid var(--line);
+}
+html[data-theme="light"] .md pre.code{background:#181c26}
+.md pre.code code{background:none;padding:0;color:inherit;font-size:13px;line-height:1.7}
+.md table{width:100%;border-collapse:collapse;margin:1.1em 0;font-size:14px;display:block;overflow-x:auto}
+.md th,.md td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+.md th{background:var(--code-bg);font-weight:700;white-space:nowrap}
+.md img{max-width:100%;height:auto;border-radius:10px;border:1px solid var(--line)}
+.md input[type="checkbox"]{margin-right:6px}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:900px){
+  nav.top-nav{display:none}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cards{grid-template-columns:1fr}
+  .reader-body{padding:20px 18px 50px}
+  .reader-head{padding:14px 16px 12px}
+}
+@media (max-width:640px){
+  .wrap{width:min(1180px,100% - 26px)}
+  .brand small{display:none}
+  .search{max-width:none;flex:1 1 100%;margin-left:0}
+  .toolbar{position:static}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.0001ms!important;animation-iteration-count:1!important;transition-duration:.0001ms!important}
+}
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span></div>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top">
+      <span class="mark">W</span>
+      <span>My-Weekly<small>技术周刊 · 知识库</small></span>
+    </a>
+    <nav class="top-nav">
+      <a href="#topics">主题</a>
+      <a href="#archive">文档归档</a>
+      <a href="#about">关于</a>
+    </nav>
+    <div class="top-actions">
+      <button class="icon-btn" id="theme" title="切换深浅色" aria-label="切换深浅色">🌙</button>
+      <a class="btn sm" href="https://github.com/xiaozhouzhoua/My-Weekly" target="_blank" rel="noopener">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.93-.89-1.18-.89-1.18-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.71 1.22 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A7.99 7.99 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        仓库
+      </a>
+    </div>
+  </div>
+</header>
+
+<a id="top"></a>
+<main>
+  <section class="hero wrap">
+    <span class="pill">📚 技术周刊 · 持续更新</span>
+    <h1>把零散的技术笔记，<br><span class="grad">整理成自己的周刊</span></h1>
+    <p class="lead">
+      My-Weekly 是一个专注于开发实践与技术文档管理的中文知识库：命令行与 Shell、Java 工程、
+      数据库与缓存、CI/CD 与 AI 工具，按年份归档，每篇都来自真实项目里踩过的坑和验证过的做法。
+    </p>
+    <p class="sub">本页是仓库首页（<code>index.html</code>），由 GitHub Pages 直接从 <code>main</code> 分支根目录发布，无需任何构建步骤。</p>
+    <div class="hero-actions">
+      <a class="btn primary" href="#archive">开始浏览文档 →</a>
+      <a class="btn" href="https://github.com/xiaozhouzhoua/My-Weekly" target="_blank" rel="noopener">在 GitHub 上查看源码</a>
+    </div>
+    <div class="stats">
+      <div><b id="st-notes">—</b><span>篇技术文档</span></div>
+      <div><b id="st-years">—</b><span>个年度归档</span></div>
+      <div><b id="st-words">—</b><span>累计字数</span></div>
+      <div><b id="st-tags">—</b><span>个主题方向</span></div>
+    </div>
+  </section>
+
+  <section class="wrap" id="topics">
+    <div class="sec-head">
+      <div class="eyebrow">Topics</div>
+      <h2>收录主题</h2>
+      <p>点击任意主题即可筛选下方文档列表。所有文档均为中文编写，重点记录实际开发中遇到的问题与解决方案。</p>
+    </div>
+    <div class="topics" id="topic-grid"></div>
+  </section>
+
+  <section class="wrap" id="archive">
+    <div class="sec-head">
+      <div class="eyebrow">Archive</div>
+      <h2>文档归档</h2>
+      <p>按年份倒序排列。点击「阅读」可在本页直接打开 Markdown 正文，点击「原文」跳转 GitHub。</p>
+    </div>
+
+    <div class="toolbar">
+      <div class="row">
+        <div class="chips" id="year-chips" role="group" aria-label="按年份筛选"></div>
+        <div class="search">
+          <span class="s-ico">🔍</span>
+          <input id="q" type="search" placeholder="搜索标题、摘要或标签…" autocomplete="off" aria-label="搜索文档">
+          <kbd>/</kbd>
+        </div>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <div class="chips" id="tag-chips" role="group" aria-label="按标签筛选"></div>
+      </div>
+      <div class="hint">
+        <span id="result-count"></span>
+        <button id="reset" hidden>清除筛选</button>
+      </div>
+    </div>
+
+    <div id="groups"></div>
+  </section>
+
+  <section class="wrap" id="about">
+    <div class="sec-head">
+      <div class="eyebrow">About</div>
+      <h2>关于本仓库</h2>
+      <p>仓库名 My-Weekly，默认分支 <code>main</code>。目录即时间轴：<code>2023/</code>、<code>2024/</code>、<code>2025/</code> 各自存放当年的文档，根目录放专题报告与说明文件。</p>
+    </div>
+    <div class="notes">
+      <div class="note">
+        <h3>📁 目录结构</h3>
+        <ul>
+          <li><code>2023/</code> — 命令行、Java、Maven、Redis 等 8 篇</li>
+          <li><code>2024/</code> — 1 篇占位文档</li>
+          <li><code>2025/</code> — PostgreSQL、Shell、AI 工具等 4 篇</li>
+          <li><code>images/</code> — 文档引用的图片资源</li>
+        </ul>
+      </div>
+      <div class="note">
+        <h3>🚀 访问方式</h3>
+        <p>
+          线上：<a href="https://xiaozhouzhoua.github.io/My-Weekly/" target="_blank" rel="noopener">xiaozhouzhoua.github.io/My-Weekly/</a><br>
+          本地：克隆仓库后用任意静态服务器打开本文件，例如<br>
+          <code>python -m http.server 8000</code>
+        </p>
+      </div>
+      <div class="note">
+        <h3>🛠️ 发布方式</h3>
+        <p>
+          仓库 <b>Settings → Pages → Source</b> 选择 <code>main</code> 分支 <code>/ (root)</code>，
+          入口文件必须叫 <code>index.html</code>，无需工作流。根目录的 <code>.nojekyll</code>
+          让 Pages 原样发布文件、不做 Jekyll 转换，因此本页可以直接读取同目录的 <code>.md</code> 原文。
+        </p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="bottom">
+  <div class="wrap">
+    <span>© <span id="year-now"></span> My-Weekly · 中文技术知识库</span>
+    <span class="r">
+      <a href="https://github.com/xiaozhouzhoua/My-Weekly" target="_blank" rel="noopener">GitHub 仓库</a>
+      <a href="https://github.com/xiaozhouzhoua/My-Weekly/blob/main/README.md" target="_blank" rel="noopener">README</a>
+      <a href="#top">回到顶部 ↑</a>
+    </span>
+  </div>
+</footer>
+
+<!-- 阅读器 -->
+<div class="overlay" id="overlay" hidden>
+  <div class="scrim" data-close></div>
+  <div class="reader" role="dialog" aria-modal="true" aria-labelledby="reader-title">
+    <div class="reader-head">
+      <div>
+        <span class="badge" id="reader-badge">—</span>
+        <h2 id="reader-title">加载中…</h2>
+        <div class="meta" id="reader-meta"></div>
+      </div>
+      <button class="icon-btn close" id="reader-close" aria-label="关闭阅读器" title="关闭 (Esc)">✕</button>
+    </div>
+    <div class="reader-bar" aria-hidden="true"><i id="reader-progress"></i></div>
+    <div class="reader-body" id="reader-body" tabindex="-1"></div>
+    <div class="reader-foot">
+      <span id="reader-foot-meta"></span>
+      <a class="btn sm" id="reader-gh" href="#" target="_blank" rel="noopener" style="margin-left:auto">在 GitHub 上查看原文 ↗</a>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   数据：仓库中的全部 Markdown 文档
+   f = 仓库内路径（用于站内 fetch 与 GitHub 链接）
+   kb / chars 取自实际文件，用于展示体积与阅读时长
+   ========================================================= */
+const REPO = 'https://github.com/xiaozhouzhoua/My-Weekly';
+const BRANCH = 'main';
+
+const DOCS = [
+  {y:'2025',t:'PostgreSQL 高级特性使用文档',f:'2025/PostgreSQL_高级特性使用文档.md',kb:13.6,chars:8407,
+   d:'PostgreSQL 高级特性系统整理：视图、函数、存储过程与触发器，含语法说明与可运行示例。',tags:['数据库','SQL']},
+  {y:'2025',t:'Linux 输入输出重定向教程',f:'2025/Linux-输入输出重定向教程.md',kb:3.7,chars:1670,
+   d:'从文件描述符讲起，梳理 >、>>、2>、&>、tee 与管道的用法和常见误区。',tags:['命令行','Linux']},
+  {y:'2025',t:'Bash 脚本括号表达式详解',f:'2025/Bash_脚本括号表达式详解.md',kb:3.6,chars:1976,
+   d:'$()、${}、$(())、[]、[[]]、() 等括号表达式的作用与区别，逐条配示例说明。',tags:['命令行','Bash']},
+  {y:'2025',t:'Cursor 网页版试用记录',f:'2025/cursor.md',kb:0.2,chars:125,
+   d:'Cursor 推出网页版后绑定 GitHub、在网页上生成内容并直接提 PR 的体验记录。',tags:['工程化','AI']},
+
+  {y:'2024',t:'work',f:'2024/work.md',kb:0.02,chars:0,
+   d:'2024 年目录下的占位文档，正文尚未写入。',tags:['占位'],empty:true},
+
+  {y:'2023',t:'命令行的艺术',f:'2023/命令行的艺术.md',kb:36.6,chars:18327,
+   d:'覆盖基础、日常使用、文件与数据处理、系统调试、单行脚本的命令行技巧长文，共 9 个章节。',tags:['命令行','Linux','效率']},
+  {y:'2023',t:'Apache Commons IO',f:'2023/Apache Commons IO.md',kb:7.0,chars:4575,
+   d:'Commons IO 常用工具类笔记：文件读写、目录遍历、文件比较与监视，含 Maven 依赖。',tags:['Java','工具库']},
+  {y:'2023',t:'常用命令',f:'2023/常用命令.md',kb:4.3,chars:2687,
+   d:'日常开发命令速查：文件查找、进程树、history 统计、SSH 免密、按时间清理文件。',tags:['命令行','速查']},
+  {y:'2023',t:'redis7',f:'2023/redis7.md',kb:2.1,chars:1582,
+   d:'在 openEuler 上从源码编译安装 Redis 7 的完整步骤：依赖、编译、配置与服务启动。',tags:['数据库','运维']},
+  {y:'2023',t:'maven 问题汇总',f:'2023/maven问题汇总.md',kb:2.0,chars:1209,
+   d:'Maven 实战踩坑记录：私服依赖下载失败、HTTP/HTTPS 与 SSL 校验、Malformed \\uxxxx 编码异常。',tags:['Java','排错']},
+  {y:'2023',t:'端口已绑定问题',f:'2023/端口已绑定问题.md',kb:0.4,chars:247,
+   d:'Windows 与 Linux 下端口占用的定位与释放：netstat / taskkill 与 lsof / kill 的对照用法。',tags:['排错','运维']},
+  {y:'2023',t:'Github Actions',f:'2023/Github Actions.md',kb:0.3,chars:221,
+   d:'用 GitHub Actions 自动生成个人标星项目列表，附参考项目与 ACCESS_TOKEN 权限要点。',tags:['工程化','CI/CD']},
+  {y:'2023',t:'Spring Boot 相关',f:'2023/Spring Boot相关.md',kb:0.3,chars:205,
+   d:'Spring Boot 日志配置片段：关闭全部日志输出，以及彩色控制台日志的 pattern 写法。',tags:['Java','配置']},
+
+  {y:'root',t:'李笑来《财富的真相》研究报告',f:'李笑来《财富的真相》研究报告.md',kb:3.3,chars:1238,
+   d:'一份考证型报告：确认《财富的真相》并非李笑来著作，并梳理其真实作品清单。',tags:['研究','读书']},
+  {y:'root',t:'README · 技术知识库说明',f:'README.md',kb:4.6,chars:2266,
+   d:'仓库总览：项目简介、目录结构、技术栈覆盖、使用指南、贡献方式与文档规范。',tags:['仓库文档']},
+  {y:'root',t:'workspace_summary · 工作区内容总结',f:'workspace_summary.md',kb:2.5,chars:1145,
+   d:'逐目录、逐文件的内容概览，以及这个知识库适合解决什么问题、价值在哪里。',tags:['仓库文档']}
+];
+
+const GROUPS = [
+  {key:'2025',label:'2025',sub:'数据库、Shell 与 AI 工具',big:true},
+  {key:'2024',label:'2024',sub:'仅有占位文档，等待内容补齐',big:true},
+  {key:'2023',label:'2023',sub:'命令行、Java 工程与缓存实战',big:true},
+  {key:'root',label:'专题与仓库文档',sub:'根目录下的研究报告与说明文件',big:false}
+];
+
+const TOPICS = [
+  {tag:'命令行',ico:'❯',d:'Shell 技巧、常用命令与 Bash 语法'},
+  {tag:'Java',ico:'☕',d:'Maven、Spring Boot 与基础工具库'},
+  {tag:'数据库',ico:'▤',d:'Redis 与 PostgreSQL 实战记录'},
+  {tag:'排错',ico:'⚑',d:'端口占用、依赖下载等常见故障'},
+  {tag:'工程化',ico:'⚙',d:'GitHub Actions 与 AI 编码工具'},
+  {tag:'研究',ico:'✦',d:'读书笔记与专题调研报告'}
+];
+
+/* ========================================================= */
+const $  = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const words = n => n>=10000 ? (n/10000).toFixed(1)+' 万字' : n.toLocaleString('zh-CN')+' 字';
+const mins  = n => Math.max(1, Math.ceil(n/400));
+const ghUrl = f => REPO+'/blob/'+BRANCH+'/'+encodeURI(f);
+
+/* ---------- 主题切换 ---------- */
+(function theme(){
+  const saved = localStorage.getItem('mw-theme');
+  const dark = saved ? saved==='dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  const apply = d => { document.documentElement.dataset.theme = d?'dark':'light';
+    $('#theme').textContent = d?'☀️':'🌙'; };
+  apply(dark);
+  $('#theme').addEventListener('click',()=>{
+    const d = document.documentElement.dataset.theme!=='dark';
+    apply(d); localStorage.setItem('mw-theme', d?'dark':'light');
+  });
+})();
+
+/* ---------- 统计 ---------- */
+(function stats(){
+  const notes = DOCS.filter(d=>d.y!=='root');
+  const tags  = new Set(notes.flatMap(d=>d.tags).filter(t=>!['占位','速查','SQL','Bash','Linux','配置','工具库','CI/CD','AI','运维'].includes(t)));
+  $('#st-notes').textContent  = notes.length;
+  $('#st-years').textContent  = new Set(notes.map(d=>d.y)).size;
+  $('#st-words').textContent  = (notes.reduce((s,d)=>s+d.chars,0)/10000).toFixed(1)+' 万';
+  $('#st-tags').textContent   = 6;
+  $('#year-now').textContent  = new Date().getFullYear();
+})();
+
+/* ---------- 主题卡片 ---------- */
+(function topics(){
+  $('#topic-grid').innerHTML = TOPICS.map(t=>{
+    const n = DOCS.filter(d=>d.tags.includes(t.tag)).length;
+    return '<button class="topic" data-tag="'+esc(t.tag)+'">'+
+      '<span class="ico" aria-hidden="true">'+t.ico+'</span>'+
+      '<h3>'+esc(t.tag)+'</h3><p>'+esc(t.d)+'</p>'+
+      '<span class="cnt">'+n+' 篇文档 →</span></button>';
+  }).join('');
+})();
+
+/* ---------- 筛选器 ---------- */
+const state = {year:'all', tag:'all', q:''};
+
+function yearChips(){
+  const rows = GROUPS.map(g=>({key:g.key, label:g.key==='root'?'专题与文档':g.label,
+    n:DOCS.filter(d=>d.y===g.key).length}));
+  const all = {key:'all', label:'全部', n:DOCS.length};
+  return [all, ...rows];
+}
+function tagChips(){
+  const counts = {};
+  DOCS.forEach(d=>d.tags.forEach(t=>counts[t]=(counts[t]||0)+1));
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'zh'))
+    .map(([tag,n])=>({tag,n}));
+}
+function renderChips(){
+  $('#year-chips').innerHTML = yearChips().map(c=>
+    '<button class="chip" data-year="'+esc(c.key)+'" aria-pressed="'+(state.year===c.key)+'">'+
+    esc(c.label)+'<span class="n">'+c.n+'</span></button>').join('');
+  $('#tag-chips').innerHTML = [{tag:'all',n:DOCS.length}, ...tagChips()].map(c=>
+    '<button class="chip" data-tag="'+esc(c.tag)+'" aria-pressed="'+(state.tag===c.tag)+'">'+
+    (c.tag==='all'?'全部标签':esc(c.tag))+'<span class="n">'+c.n+'</span></button>').join('');
+}
+
+function match(d){
+  if(state.year!=='all' && d.y!==state.year) return false;
+  if(state.tag!=='all' && !d.tags.includes(state.tag)) return false;
+  if(state.q){
+    const hay = (d.t+' '+d.d+' '+d.tags.join(' ')+' '+d.f).toLowerCase();
+    if(!hay.includes(state.q)) return false;
+  }
+  return true;
+}
+
+function card(d){
+  const size = d.kb>=1 ? d.kb.toFixed(1)+' KB' : '<1 KB';
+  const meta = d.chars ? words(d.chars)+' · 约 '+mins(d.chars)+' 分钟' : '空文件';
+  return '<article class="card" data-f="'+esc(d.f)+'">'+
+    '<div class="c-top">'+
+      '<span class="badge'+(d.y==='root'?' ghost':'')+'">'+(d.y==='root'?'专题':esc(d.y))+'</span>'+
+      '<span class="badge ghost">'+size+'</span>'+
+      (d.empty?'<span class="badge ghost">待补充</span>':'')+
+    '</div>'+
+    '<h3>'+esc(d.t)+'</h3>'+
+    '<p class="sum">'+esc(d.d)+'</p>'+
+    '<div class="tags">'+d.tags.map(t=>'<span class="tag">#'+esc(t)+'</span>').join('')+'</div>'+
+    '<div class="c-foot">'+
+      '<span class="meta">'+meta+'</span>'+
+      '<span class="acts">'+
+        '<button class="link-mini" data-read="'+esc(d.f)+'">阅读</button>'+
+        '<a class="link-mini" href="'+ghUrl(d.f)+'" target="_blank" rel="noopener">原文 ↗</a>'+
+      '</span>'+
+    '</div></article>';
+}
+
+function render(){
+  const list = DOCS.filter(match);
+  const host = $('#groups');
+  let html = '';
+  GROUPS.forEach(g=>{
+    const items = list.filter(d=>d.y===g.key);
+    if(!items.length) return;
+    html += '<section class="group" id="grp-'+g.key+'">'+
+      '<div class="group-head">'+
+        '<span class="yr'+(g.big?'':' sm')+'">'+esc(g.label)+'</span>'+
+        '<span class="gs">'+esc(g.sub)+'</span>'+
+        '<span class="gc">'+items.length+' 篇</span>'+
+      '</div><div class="cards">'+items.map(card).join('')+'</div></section>';
+  });
+  host.innerHTML = html || '<div class="empty">没有匹配的文档，试试换个关键词或清除筛选。</div>';
+
+  const n = list.length;
+  $('#result-count').textContent = '共 '+n+' / '+DOCS.length+' 篇' +
+    (state.year!=='all' || state.tag!=='all' || state.q ? '（已筛选）' : '');
+  $('#reset').hidden = !(state.year!=='all' || state.tag!=='all' || state.q);
+  renderChips();
+}
+
+/* ---------- 事件：筛选 ---------- */
+$('#year-chips').addEventListener('click',e=>{
+  const b = e.target.closest('[data-year]'); if(!b) return;
+  state.year = b.dataset.year; render();
+});
+$('#tag-chips').addEventListener('click',e=>{
+  const b = e.target.closest('[data-tag]'); if(!b) return;
+  state.tag = b.dataset.tag; render();
+});
+$('#topic-grid').addEventListener('click',e=>{
+  const b = e.target.closest('[data-tag]'); if(!b) return;
+  state.tag = b.dataset.tag; state.year='all'; state.q=''; $('#q').value='';
+  render();
+  $('#archive').scrollIntoView({behavior:'smooth',block:'start'});
+});
+$('#q').addEventListener('input',e=>{ state.q = e.target.value.trim().toLowerCase(); render(); });
+$('#reset').addEventListener('click',()=>{
+  state.year='all'; state.tag='all'; state.q=''; $('#q').value=''; render();
+});
+addEventListener('keydown',e=>{
+  if(e.key==='/' && !/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)){
+    e.preventDefault(); $('#q').focus();
+  }
+  if(e.key==='Escape' && !$('#overlay').hidden) closeReader();
+});
+
+/* =========================================================
+   迷你 Markdown 渲染器（无依赖，支持标题 / 列表 / 表格 /
+   引用 / 围栏代码 / 链接 / 图片 / 强调 / 内联代码）
+   ========================================================= */
+const slug = s => {
+  const t = String(s).trim().toLowerCase()
+    .replace(/[`*_~]/g,'')
+    .replace(/\s+/g,'-')
+    .replace(/[^\p{L}\p{N}\-]/gu,'');
+  return t || 'section';
+};
+let slugCount = {};
+const slugUniq = s => { const k = slug(s); slugCount[k]=(slugCount[k]||0)+1; return slugCount[k]>1 ? k+'-'+(slugCount[k]-1) : k; };
+
+let curPath = 'README.md';
+function baseUrl(){ return new URL('.', new URL(encodeURI(curPath), location.href)); }
+function resolve(url){
+  if(/^([a-z][a-z0-9+.-]*:|\/\/|#|data:)/i.test(url)) return url;
+  try{ return new URL(url, baseUrl()).href; }catch(_){ return url; }
+}
+function inline(s){
+  const parts=[]; let last=0; const re=/`([^`]+)`/g; let m;
+  while((m=re.exec(s))){ parts.push([0,s.slice(last,m.index)]); parts.push([1,m[1]]); last=re.lastIndex; }
+  parts.push([0,s.slice(last)]);
+  return parts.map(([kind,v])=>{
+    if(kind) return '<code>'+esc(v)+'</code>';
+    let t = esc(v);
+    t = t.replace(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+&quot;([^&]*)&quot;)?\)/g,
+      (_,alt,url,title)=>'<img src="'+resolve(url)+'" alt="'+alt+'"'+(title?' title="'+title+'"':'')+' loading="lazy">');
+    t = t.replace(/\[([^\]]+)\]\(([^)\s]+)(?:\s+&quot;([^&]*)&quot;)?\)/g,
+      (_,txt,url,title)=>{
+        const ext = /^(https?:)?\/\//i.test(url);
+        return '<a href="'+resolve(url)+'"'+(title?' title="'+title+'"':'')+(ext?' target="_blank" rel="noopener"':'')+'>'+txt+'</a>';
+      });
+    t = t.replace(/&lt;(https?:\/\/[^\s&]+)&gt;/g,(_,u)=>'<a href="'+u+'" target="_blank" rel="noopener">'+u+'</a>');
+    t = t.replace(/&lt;([\w.+-]+@[\w-]+\.[\w.-]+)&gt;/g,'<a href="mailto:$1">$1</a>');
+    t = t.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/__([^_]+)__/g,'<strong>$1</strong>');
+    t = t.replace(/(^|[^*\w])\*([^*\n]+)\*/g,'$1<em>$2</em>').replace(/(^|[^_\w])_([^_\n]+)_/g,'$1<em>$2</em>');
+    t = t.replace(/~~([^~]+)~~/g,'<del>$1</del>');
+    t = t.replace(/\[([ xX])\]\s?/g,(_,c)=>(c.toLowerCase()==='x'?'✅ ':'⬜ '));
+    return t;
+  }).join('');
+}
+
+function mdToHtml(src){
+  slugCount = {};
+  const lines = String(src).replace(/\r\n?/g,'\n').split('\n');
+  const out = [];
+  const isList   = l => /^\s*([-*+]|\d+[.)])\s+/.test(l);
+  const isFence  = l => /^\s*(```|~~~)/.test(l);
+  const isHead   = l => /^#{1,6}\s+/.test(l);
+  const isQuote  = l => /^\s*>/.test(l);
+  const isHr     = l => /^\s*([-*_])\s*(\1\s*){2,}$/.test(l);
+  const isTableSep = l => /^\s*\|?[\s:|-]*-[\s:|-]*\|?\s*$/.test(l) && l.includes('-');
+  const splitRow = l => l.trim().replace(/^\|/,'').replace(/\|$/,'').split('|').map(c=>c.trim());
+
+  let i = 0;
+  while(i < lines.length){
+    const line = lines[i];
+    if(!line.trim()){ i++; continue; }
+
+    // 围栏代码块
+    if(isFence(line)){
+      const marker = line.trim().slice(0,3);
+      const lang = line.trim().slice(3).trim();
+      const buf = []; i++;
+      while(i < lines.length && !lines[i].trim().startsWith(marker)){ buf.push(lines[i]); i++; }
+      i++;
+      out.push('<pre class="code"'+(lang?' data-lang="'+esc(lang)+'"':'')+'><code>'+esc(buf.join('\n'))+'</code></pre>');
+      continue;
+    }
+    // 分隔线
+    if(isHr(line)){ out.push('<hr>'); i++; continue; }
+    // 标题
+    if(isHead(line)){
+      const m = line.match(/^(#{1,6})\s+(.*)$/);
+      const lv = m[1].length;
+      const txt = m[2].replace(/\s+#+\s*$/,'');
+      out.push('<h'+lv+' id="'+slugUniq(txt)+'">'+inline(txt)+'</h'+lv+'>');
+      i++; continue;
+    }
+    // 引用
+    if(isQuote(line)){
+      const buf = [];
+      while(i < lines.length && (isQuote(lines[i]) || (buf.length && lines[i].trim() && !isHead(lines[i]) && !isFence(lines[i]) && !isList(lines[i])))){
+        buf.push(lines[i].replace(/^\s*>\s?/,'')); i++;
+      }
+      out.push('<blockquote>'+mdToHtml(buf.join('\n'))+'</blockquote>');
+      continue;
+    }
+    // 表格
+    if(line.includes('|') && i+1 < lines.length && isTableSep(lines[i+1]) && lines[i].includes('|')){
+      const head = splitRow(line);
+      const align = splitRow(lines[i+1]).map(s=>s.startsWith(':')&&s.endsWith(':')?'center':s.endsWith(':')?'right':s.startsWith(':')?'left':'');
+      i += 2;
+      const rows = [];
+      while(i < lines.length && lines[i].trim() && lines[i].includes('|')){ rows.push(splitRow(lines[i])); i++; }
+      const th = head.map((c,k)=>'<th'+(align[k]?' style="text-align:'+align[k]+'"':'')+'>'+inline(c)+'</th>').join('');
+      const tb = rows.map(r=>'<tr>'+head.map((_,k)=>'<td'+(align[k]?' style="text-align:'+align[k]+'"':'')+'>'+inline(r[k]||'')+'</td>').join('')+'</tr>').join('');
+      out.push('<table><thead><tr>'+th+'</tr></thead><tbody>'+tb+'</tbody></table>');
+      continue;
+    }
+    // 列表
+    if(isList(line)){
+      const items = [];
+      while(i < lines.length){
+        const l = lines[i];
+        const m = l.match(/^(\s*)([-*+]|\d+[.)])\s+(.*)$/);
+        if(m){ items.push({indent:m[1].replace(/\t/g,'  ').length, ordered:/\d/.test(m[2]), text:m[3]}); i++; continue; }
+        if(l.trim() && /^\s{2,}/.test(l) && items.length){ items[items.length-1].text += '<br>' + l.trim(); i++; continue; }
+        break;
+      }
+      const root = {children:[]};
+      const stack = [{indent:-1, node:root}];
+      items.forEach(it=>{
+        while(stack.length>1 && stack[stack.length-1].indent >= it.indent) stack.pop();
+        const node = {text:it.text, ordered:it.ordered, children:[]};
+        stack[stack.length-1].node.children.push(node);
+        stack.push({indent:it.indent, node});
+      });
+      const ser = node => {
+        const tag = node.ordered ? 'ol' : 'ul';
+        return '<'+tag+'>'+node.children.map(c=>'<li>'+inline(c.text)+(c.children.length?ser(c.children):'')+'</li>').join('')+'</'+tag+'>';
+      };
+      out.push(ser(root));
+      continue;
+    }
+    // 段落（保留作者换行）
+    const buf = [];
+    while(i < lines.length && lines[i].trim() && !isHead(lines[i]) && !isFence(lines[i]) && !isQuote(lines[i])
+          && !isHr(lines[i]) && !isList(lines[i]) && !(lines[i].includes('|') && lines[i+1] !== undefined && isTableSep(lines[i+1]))){
+      buf.push(lines[i].trim()); i++;
+    }
+    if(buf.length) out.push('<p>'+inline(buf.join('<br>'))+'</p>'); else i++;
+  }
+  return out.join('\n');
+}
+
+/* =========================================================
+   阅读器
+   ========================================================= */
+const overlay = $('#overlay');
+let lastFocus = null;
+
+function findDoc(f){ return DOCS.find(d=>d.f===f); }
+
+async function openDoc(f, push){
+  const doc = findDoc(f);
+  if(!doc) return;
+  curPath = f;
+  lastFocus = document.activeElement;
+  overlay.hidden = false;
+  document.body.style.overflow = 'hidden';
+  $('#reader-badge').textContent = doc.y==='root' ? '专题' : doc.y;
+  $('#reader-title').textContent = doc.t;
+  $('#reader-meta').innerHTML = '<span>'+esc(doc.f)+'</span><span>'+(doc.chars?words(doc.chars)+' · 约 '+mins(doc.chars)+' 分钟':'空文件')+'</span>';
+  $('#reader-gh').href = ghUrl(f);
+  $('#reader-foot-meta').textContent = 'My-Weekly · ' + (doc.y==='root'?'根目录':doc.y+'/') + ' · ' + doc.kb.toFixed(1) + ' KB';
+  const body = $('#reader-body');
+  body.innerHTML = '<div class="loading"><div class="spin"></div>正在读取 Markdown 原文…</div>';
+  $('#reader-progress').style.width = '0%';
+  body.scrollTop = 0;
+  if(push) history.replaceState(null,'','#doc='+encodeURIComponent(f));
+
+  try{
+    const res = await fetch(encodeURI(f), {cache:'no-cache'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const text = await res.text();
+    if(!text.trim()){
+      body.innerHTML = '<div class="load-err"><h3>这篇文档还是空的</h3><p>'+esc(doc.f)+
+        ' 目前只有占位内容，等待补齐。<a href="'+ghUrl(f)+'" target="_blank" rel="noopener">去 GitHub 编辑 ↗</a></p></div>';
+      return;
+    }
+    body.innerHTML = '<article class="md">'+mdToHtml(text)+'</article>';
+  }catch(err){
+    body.innerHTML = '<div class="load-err"><h3>正文读取失败</h3>'+
+      '<p>'+esc(String(err && err.message || err))+'。如果是以 <code>file://</code> 直接打开本文件，浏览器会拦截本地读取；'+
+      '请用静态服务器（例如 <code>python -m http.server 8000</code>）或直接访问 Pages 站点。</p>'+
+      '<p><a class="btn sm" href="'+ghUrl(f)+'" target="_blank" rel="noopener">在 GitHub 上阅读原文 ↗</a></p></div>';
+  }
+  body.focus({preventScroll:true});
+}
+
+function closeReader(){
+  overlay.hidden = true;
+  document.body.style.overflow = '';
+  history.replaceState(null,'',location.pathname+location.search);
+  if(lastFocus && lastFocus.focus) lastFocus.focus();
+}
+
+document.addEventListener('click',e=>{
+  const reader = e.target.closest('[data-read]');
+  if(reader){ openDoc(reader.dataset.read, true); return; }
+  if(e.target.closest('[data-close]') || e.target.closest('#reader-close')){ closeReader(); return; }
+  // 卡片空白处点击也打开
+  const cardEl = e.target.closest('.card');
+  if(cardEl && !e.target.closest('a')) openDoc(cardEl.dataset.f, true);
+});
+$('#reader-body').addEventListener('click',e=>{
+  const a = e.target.closest('a[href^="#"]');
+  if(!a) return;
+  const id = decodeURIComponent(a.getAttribute('href').slice(1));
+  const target = document.getElementById(id) || $('#reader-body [id="'+CSS.escape(id)+'"]');
+  if(target){ e.preventDefault(); target.scrollIntoView({behavior:'smooth',block:'start'}); }
+});
+$('#reader-body').addEventListener('scroll',()=>{
+  const el = $('#reader-body');
+  const max = el.scrollHeight - el.clientHeight;
+  $('#reader-progress').style.width = (max>0 ? (el.scrollTop/max*100) : 100) + '%';
+});
+
+/* ---------- 启动 ---------- */
+render();
+(function route(){
+  const m = location.hash.match(/^#doc=(.+)$/);
+  if(m){
+    const f = decodeURIComponent(m[1]);
+    if(findDoc(f)) setTimeout(()=>openDoc(f,false), 60);
+  }
+})();
+addEventListener('hashchange',()=>{
+  const m = location.hash.match(/^#doc=(.+)$/);
+  if(m){ const f = decodeURIComponent(m[1]); if(findDoc(f) && overlay.hidden) openDoc(f,false); }
+  else if(!overlay.hidden) closeReader();
+});
+</script>
+</body>
+</html>
