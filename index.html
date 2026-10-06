@@ -21,7 +21,7 @@
   --accent:#4f46e5;
   --accent-2:#0ea5a4;
   --accent-soft:rgba(79,70,229,.10);
-  --code-bg:rgba(20,24,40,.055);
+  --code-bg:rgba(20,24,40,.09);
   --shadow-1:0 1px 2px rgba(16,20,40,.05), 0 8px 24px -12px rgba(16,20,40,.20);
   --shadow-2:0 2px 4px rgba(16,20,40,.06), 0 28px 60px -24px rgba(16,20,40,.34);
   --radius:16px;
@@ -277,12 +277,14 @@ footer.bottom .r{margin-left:auto;display:flex;gap:14px;flex-wrap:wrap}
   background:var(--accent-soft);border-radius:0 10px 10px 0;color:var(--text-2);
 }
 .md blockquote p{margin:.3em 0}
-.md code{font:13.5px/1.6 var(--mono);background:var(--code-bg);padding:2px 6px;border-radius:6px;word-break:break-word}
+.md code{font:13.5px/1.6 var(--mono);background:var(--code-bg);padding:2px 6px;border-radius:6px;word-break:break-word;border:1px solid var(--line)}
 .md pre.code{
   margin:1.1em 0;padding:15px 17px;border-radius:12px;overflow:auto;
-  background:color-mix(in srgb,var(--text) 92%,transparent);color:#eef1f7;border:1px solid var(--line);
+  background:#141924;color:#e6e9f2;border:1px solid var(--line-strong);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
 }
-html[data-theme="light"] .md pre.code{background:#181c26}
+html[data-theme="light"] .md pre.code{background:#161b28}
+html[data-theme="dark"] .md pre.code{background:#0d1017}
 .md pre.code code{background:none;padding:0;color:inherit;font-size:13px;line-height:1.7}
 .md table{width:100%;border-collapse:collapse;margin:1.1em 0;font-size:14px;display:block;overflow-x:auto}
 .md th,.md td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
