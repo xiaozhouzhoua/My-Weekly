@@ -21,7 +21,7 @@
   --accent:#4f46e5;
   --accent-2:#0ea5a4;
   --accent-soft:rgba(79,70,229,.10);
-  --code-bg:rgba(20,24,40,.09);
+  --code-bg:rgba(175,184,193,.2);
   --shadow-1:0 1px 2px rgba(16,20,40,.05), 0 8px 24px -12px rgba(16,20,40,.20);
   --shadow-2:0 2px 4px rgba(16,20,40,.06), 0 28px 60px -24px rgba(16,20,40,.34);
   --radius:16px;
@@ -42,7 +42,7 @@ html[data-theme="dark"]{
   --accent:#8b8cf9;
   --accent-2:#42d6cf;
   --accent-soft:rgba(139,140,249,.14);
-  --code-bg:rgba(255,255,255,.06);
+  --code-bg:rgba(175,184,193,.2);
   --shadow-1:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -16px rgba(0,0,0,.8);
   --shadow-2:0 2px 6px rgba(0,0,0,.5), 0 40px 80px -30px rgba(0,0,0,.9);
 }
@@ -277,15 +277,28 @@ footer.bottom .r{margin-left:auto;display:flex;gap:14px;flex-wrap:wrap}
   background:var(--accent-soft);border-radius:0 10px 10px 0;color:var(--text-2);
 }
 .md blockquote p{margin:.3em 0}
-.md code{font:13.5px/1.6 var(--mono);background:var(--code-bg);padding:2px 6px;border-radius:6px;word-break:break-word;border:1px solid var(--line)}
+.md code{font:85%/1.6 var(--mono);background:var(--code-bg);padding:.2em .4em;border-radius:6px;word-break:break-word}
 .md pre.code{
-  margin:1.1em 0;padding:15px 17px;border-radius:12px;overflow:auto;
-  background:#141924;color:#e6e9f2;border:1px solid var(--line-strong);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+  margin:1em 0;padding:16px;border-radius:6px;overflow:auto;
+  background:#f6f8fa;color:#24292f;border:1px solid #d0d7de;
 }
-html[data-theme="light"] .md pre.code{background:#161b28}
-html[data-theme="dark"] .md pre.code{background:#0d1017}
-.md pre.code code{background:none;padding:0;color:inherit;font-size:13px;line-height:1.7}
+.md pre.code code{background:none;padding:0;color:inherit;font:13px/1.6 var(--mono)}
+html[data-theme="dark"] .md pre.code{background:#161b22;color:#e6edf3;border-color:#30363d}
+/* GitHub 语法高亮配色 */
+.tok-com{color:#6e7781;font-style:italic}
+.tok-kw{color:#cf222e}
+.tok-str{color:#0a3069}
+.tok-num{color:#0550ae}
+.tok-lit{color:#0550ae}
+.tok-fn{color:#8250df}
+.tok-type{color:#953800}
+html[data-theme="dark"] .tok-com{color:#8b949e}
+html[data-theme="dark"] .tok-kw{color:#ff7b72}
+html[data-theme="dark"] .tok-str{color:#a5d6ff}
+html[data-theme="dark"] .tok-num{color:#79c0ff}
+html[data-theme="dark"] .tok-lit{color:#79c0ff}
+html[data-theme="dark"] .tok-fn{color:#d2a8ff}
+html[data-theme="dark"] .tok-type{color:#ffa657}
 .md table{width:100%;border-collapse:collapse;margin:1.1em 0;font-size:14px;display:block;overflow-x:auto}
 .md th,.md td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
 .md th{background:var(--code-bg);font-weight:700;white-space:nowrap}
@@ -730,6 +743,104 @@ function inline(s){
   }).join('');
 }
 
+/* ---------- 语法高亮（GitHub 配色） ---------- */
+const HL = {
+  shell: {
+    c:'#',
+    kw:'if then else elif fi for while do done case esac in function return select until time coproc'.split(' '),
+    fn:'echo export local readonly declare typeset unset set source exec trap shift continue break exit alias unalias let eval getopts cd pwd ls cat grep sed awk sudo kill test nohup wait mv cp rm mkdir chmod chown tar curl wget ssh git pip npm python node systemctl service ps top find xargs head tail sort uniq wc ln touch man'.split(' ')
+  },
+  java: {
+    c:'//', b:1, t:1,
+    kw:'public private protected static final void int long short byte char boolean double float class interface extends implements new return if else for while do switch case break continue default try catch finally throw throws import package synchronized abstract native transient volatile instanceof this super enum record var assert yield sealed permits'.split(' ')
+  },
+  sql: {
+    c:'--', b:1, t:1, ci:1,
+    kw:'select from where and or not insert into values update set delete create table view function procedure trigger alter drop join inner left right outer full on group by order having limit offset as distinct union all exists in between like is null case when then else end begin commit rollback index primary key foreign references default check constraint unique return declare language plpgsql replace temporary cascade restrict grant revoke explain analyze if loop raise exception returns row before after instead'.split(' ')
+  },
+  docker: { c:'#', ci:1, kw:'from run cmd label maintainer expose env add copy entrypoint volume user workdir arg onbuild stopsignal healthcheck shell'.split(' ') },
+  ps: {
+    c:'#', ci:1,
+    kw:'function param if else elseif foreach for while do switch case try catch finally return break continue throw new in begin process end where select set get write-host write-output read-host foreach-object where-object select-object import-module export using namespace class static public private and or not exit trap filter'.split(' ')
+  },
+  py: { c:'#', t:1, kw:'def class if elif else for while in not and or return import from as try except finally raise with lambda pass break continue yield global nonlocal assert del is async await'.split(' ') },
+  xml: { x:1 }
+};
+const HL_LIT = new Set('true false null nil none undefined nan'.split(' '));
+
+function hlFamily(lang){
+  lang = (lang||'').toLowerCase();
+  if(/^(sh|bash|shell|zsh|console)$/.test(lang)) return 'shell';
+  if(/^(java|jsp)$/.test(lang)) return 'java';
+  if(/^(sql|plpgsql|pgsql|mysql|postgres)$/.test(lang)) return 'sql';
+  if(/^(dockerfile|docker)$/.test(lang)) return 'docker';
+  if(/^(powershell|ps1|ps|posh)$/.test(lang)) return 'ps';
+  if(/^(py|python|python3)$/.test(lang)) return 'py';
+  if(/^(xml|html|svg|pom)$/.test(lang)) return 'xml';
+  return '';
+}
+
+function highlight(code, lang){
+  const fam = hlFamily(lang);
+  if(!fam) return esc(code);           // 未知/无语言：纯文本，保持 GitHub 风格
+  const cfg = HL[fam];
+  let out = '', i = 0, n = code.length;
+  const span = (cls, raw) => { out += '<span class="tok-'+cls+'">'+esc(raw)+'</span>'; };
+  const isIdentStart = c => /[A-Za-z_$]/.test(c);
+  const isIdentChar  = c => /[A-Za-z0-9_$]/.test(c);
+
+  while(i < n){
+    const ch = code[i];
+    // 块注释 /* */ 与 <!-- -->
+    if(ch==='/' && code[i+1]==='*'){
+      const e = code.indexOf('*/', i+2); const end = e<0 ? n : e+2;
+      span('com', code.slice(i,end)); i = end; continue;
+    }
+    if(cfg.x && ch==='<' && code.slice(i,i+4)==='<!--'){
+      const e = code.indexOf('-->', i+4); const end = e<0 ? n : e+3;
+      span('com', code.slice(i,end)); i = end; continue;
+    }
+    // 行注释
+    if(cfg.c && code.startsWith(cfg.c, i)){
+      let e = code.indexOf('\n', i); if(e<0) e = n;
+      span('com', code.slice(i,e)); i = e; continue;
+    }
+    // XML 标签名 / 尖括号
+    if(cfg.x && ch==='<'){
+      const m = code.slice(i).match(/^<\/?([A-Za-z_][\w:.-]*)/);
+      if(m){ out += '&lt;' + (m[0][1]==='/'?'/':'') + '<span class="tok-type">'+esc(m[1])+'</span>'; i += m[0].length; continue; }
+      out += '&lt;'; i++; continue;
+    }
+    if(cfg.x && ch==='>'){ out += '&gt;'; i++; continue; }
+    // 字符串
+    if(ch==='"' || ch==="'" || ch==='`'){
+      const q = ch; let j = i+1;
+      while(j < n){ if(code[j]==='\\'){ j+=2; continue; } if(code[j]===q){ j++; break; } j++; }
+      span('str', code.slice(i,j)); i = j; continue;
+    }
+    // 数字
+    if(/[0-9]/.test(ch) && (i===0 || !/[A-Za-z0-9_$]/.test(code[i-1]))){
+      let j = i+1;
+      while(j < n && /[0-9a-fA-FxX._]/.test(code[j])) j++;
+      span('num', code.slice(i,j)); i = j; continue;
+    }
+    // 标识符 / 关键字 / 函数 / 类型
+    if(isIdentStart(ch)){
+      let j = i+1; while(j < n && isIdentChar(code[j])) j++;
+      const w = code.slice(i,j), lw = w.toLowerCase();
+      if(cfg.kw && (cfg.ci ? cfg.kw.includes(lw) : cfg.kw.includes(w))){ span('kw', w); }
+      else if(HL_LIT.has(lw)){ span('lit', w); }
+      else if(cfg.fn && cfg.fn.includes(w)){ span('fn', w); }
+      else if(cfg.t && /^[A-Z]/.test(w)){ span('type', w); }
+      else if(j < n && code[j] === '('){ span('fn', w); }
+      else { out += esc(w); }
+      i = j; continue;
+    }
+    out += esc(ch); i++;
+  }
+  return out;
+}
+
 function mdToHtml(src){
   slugCount = {};
   const lines = String(src).replace(/\r\n?/g,'\n').split('\n');
@@ -754,7 +865,7 @@ function mdToHtml(src){
       const buf = []; i++;
       while(i < lines.length && !lines[i].trim().startsWith(marker)){ buf.push(lines[i]); i++; }
       i++;
-      out.push('<pre class="code"'+(lang?' data-lang="'+esc(lang)+'"':'')+'><code>'+esc(buf.join('\n'))+'</code></pre>');
+      out.push('<pre class="code"'+(lang?' data-lang="'+esc(lang)+'"':'')+'><code>'+highlight(buf.join('\n'), lang)+'</code></pre>');
       continue;
     }
     // 分隔线
