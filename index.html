@@ -397,12 +397,13 @@ html[data-theme="light"] .md pre.code{background:#181c26}
     <div class="sec-head">
       <div class="eyebrow">About</div>
       <h2>关于本仓库</h2>
-      <p>仓库名 My-Weekly，默认分支 <code>main</code>。目录即时间轴：<code>2023/</code>、<code>2024/</code>、<code>2025/</code> 各自存放当年的文档，根目录放专题报告与说明文件。</p>
+      <p>仓库名 My-Weekly，默认分支 <code>main</code>。目录即时间轴：<code>2023/</code>、<code>2024/</code>、<code>2025/</code>、<code>2026/</code> 各自存放当年的文档，根目录放专题报告与说明文件。</p>
     </div>
     <div class="notes">
       <div class="note">
         <h3>📁 目录结构</h3>
         <ul>
+          <li><code>2026/</code> — 虚拟线程、Docker、AI 工具、SSH 与 Redis 等 5 篇</li>
           <li><code>2023/</code> — 命令行、Java、Maven、Redis 等 8 篇</li>
           <li><code>2024/</code> — 1 篇占位文档</li>
           <li><code>2025/</code> — PostgreSQL、Shell、AI 工具等 4 篇</li>
@@ -471,6 +472,17 @@ const REPO = 'https://github.com/xiaozhouzhoua/My-Weekly';
 const BRANCH = 'main';
 
 const DOCS = [
+  {y:'2026',t:'SSH 隧道与端口转发',f:'2026/SSH隧道与端口转发.md',kb:3.6,chars:1786,
+   d:'SSH 端口转发三模式详解：本地 -L、远程 -R、动态 -D，含后台常驻、autossh 断线重连与排错要点。',tags:['命令行','Linux','运维']},
+  {y:'2026',t:'Java 虚拟线程',f:'2026/Java虚拟线程.md',kb:3.4,chars:1736,
+   d:'JDK 21 虚拟线程入门：与平台线程的差异、创建方式、执行器用法，以及适用与不适用的边界。',tags:['Java','并发']},
+  {y:'2026',t:'Redis 持久化：RDB 与 AOF',f:'2026/Redis持久化RDB与AOF.md',kb:2.9,chars:1388,
+   d:'Redis 持久化机制梳理：RDB 快照、AOF 日志与混合模式，附配置、重写、修复与选型建议。',tags:['数据库','Redis']},
+  {y:'2026',t:'Docker 多阶段构建',f:'2026/Docker多阶段构建.md',kb:3.0,chars:1801,
+   d:'用一个 Dockerfile 分离构建与运行环境、缩小镜像体积：语法、缓存技巧与 distroless/alpine 实践。',tags:['工程化','Docker']},
+  {y:'2026',t:'AI 编程助手工作流',f:'2026/AI编程助手工作流.md',kb:3.1,chars:1239,
+   d:'把 AI 编程助手组织进可验证的开发流程：拆解、约束、生成、审查、测试、提交，含 Prompt 要点与风险边界。',tags:['工程化','AI']},
+
   {y:'2025',t:'PostgreSQL 高级特性使用文档',f:'2025/PostgreSQL_高级特性使用文档.md',kb:13.6,chars:8407,
    d:'PostgreSQL 高级特性系统整理：视图、函数、存储过程与触发器，含语法说明与可运行示例。',tags:['数据库','SQL']},
   {y:'2025',t:'Linux 输入输出重定向教程',f:'2025/Linux-输入输出重定向教程.md',kb:3.7,chars:1670,
@@ -509,6 +521,7 @@ const DOCS = [
 ];
 
 const GROUPS = [
+  {key:'2026',label:'2026',sub:'虚拟线程、Docker、AI 工具与运维实战',big:true},
   {key:'2025',label:'2025',sub:'数据库、Shell 与 AI 工具',big:true},
   {key:'2024',label:'2024',sub:'仅有占位文档，等待内容补齐',big:true},
   {key:'2023',label:'2023',sub:'命令行、Java 工程与缓存实战',big:true},
